@@ -1,13 +1,40 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Jaggo from './routes/jaggo';
+import Wedding from './routes/wedding';
+import Reception from './routes/reception';
 import './index.css';
 import App from './App';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
 import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
+
+const theme = createTheme({
+  palette: {
+      type: 'light',
+      primary: {
+        main: '#ffab40',
+      },
+      secondary: {
+        main: '#f50057',
+      },
+    },
+});
+
 root.render(
   <React.StrictMode>
-    <App />
+    <ThemeProvider theme={theme}>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<App />}/>
+          <Route path="/jaggo" element={<Jaggo />}/>
+          <Route path="/wedding" element={<Wedding />}/>
+          <Route path="/reception" element={<Reception />}/>
+        </Routes>
+      </BrowserRouter>
+    </ThemeProvider>
   </React.StrictMode>
 );
 
