@@ -74,7 +74,6 @@ function Jaggo() {
     setPictures([]);
     setNextPage(null);
     setLoading(true);
-    pages.;
     console.log(pages.length)
 
     if(pages.length === 0) { 
