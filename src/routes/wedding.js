@@ -7,44 +7,54 @@ import { Container } from 'react-bootstrap';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import ResponsiveAppBar from '../components/ResponsiveAppBar';
+import Stack from '@mui/material/Stack'
 
 
 function Wedding() {
+
     const [pictures, setPictures] = useState([]);
     const [loading, setLoading] = useState(true);
     const [nextPage, setNextPage] = useState(null);
 
+    const [isPrevPage, setisPrevPage] = useState(false);
+    let pages = [];
+
     const storage = getStorage(firebaseApp);
     const pathReference = ref(storage, 'gs://weddingpictures-a5e0e.appspot.com/marriage');
-  
-    useEffect
-    (() => {
-    
-    list(pathReference, { maxResults: 12})
-        .then((result) => {
-            console.log(result);
+
+    async function getFirstFewPictures() {
+
+        try {
+            setLoading(true);
+            const result = await list(pathReference, {maxResults: 25, pageToken: nextPage});
+            console.log(result)
             if(result.nextPageToken) {
-                setNextPage(result.nextPageToken)
+                setNextPage(result.nextPageToken);
+
+                // if(!pages.includes(result.nextPageToken)) {
+                //    pages.push(result.nextPageToken); 
+                // }
+                pages.push(result.nextPageToken);
+                
             } else {
-                setNextPage(null)
+                setNextPage(null);
             }
-            result.items.forEach((item) => {
-                getDownloadURL(item)
-                .then((url) => {
-                    setPictures((pictures) => [...pictures, url]);
-                })
-                .catch((e) => {
-                    console.log(e);
-                })
-            })
-            
-        })
-        .catch((error) => {
+            for (const item of result.items) {
+                let url = await getDownloadURL(item);
+                setPictures((pictures) => [...pictures, url]);
+            }
+        } catch (error) {
             console.log(error)
-        })
-        .finally(() => {
-          setLoading(false);
-        })
+        } finally {
+            setLoading(false);
+            console.log(pages)
+        }
+        
+    }
+
+    useEffect(() => {
+
+        getFirstFewPictures();
 
         console.log(pictures)
 
@@ -57,13 +67,29 @@ function Wedding() {
 
   const getPictures = () => {
     setPictures([]);
+    setLoading(true);
+    setisPrevPage(true);
+
+    getFirstFewPictures();
+
+    console.log(pictures)
+  }
+
+  const goBackOnePage = () => {
+    console.log('inside go back one page')
+    setPictures([]);
     setNextPage(null);
     setLoading(true);
-    list(pathReference, { maxResults: 12, pageToken: nextPage})
+    console.log(pages.length)
+
+    if(pages.length === 0) { 
+        setisPrevPage(false)
+        list(pathReference, { maxResults: 12})
         .then((result) => {
             console.log(result);
             if(result.nextPageToken) {
                 setNextPage(result.nextPageToken)
+                pages.push(result.nextPageToken);
             } else {
                 setNextPage(null)
             }
@@ -84,12 +110,36 @@ function Wedding() {
         .finally(() => {
           setLoading(false);
         })
-
-        console.log(pictures)
-
-        return () => {
-          setPictures([])
+        } else {
+            list(pathReference, { maxResults: 12, pageToken: pages[pages.length - 1]})
+            .then((result) => {
+                console.log(result);
+                if(result.nextPageToken) {
+                    setNextPage(result.nextPageToken)
+                    pages.push(result.nextPageToken);
+                } else {
+                    setNextPage(null)
+                }
+                result.items.forEach((item) => {
+                    getDownloadURL(item)
+                    .then((url) => {
+                        setPictures((pictures) => [...pictures, url]);
+                    })
+                    .catch((e) => {
+                        console.log(e);
+                    })
+                })
+                
+            })
+            .catch((error) => {
+                console.log(error)
+            })
+            .finally(() => {
+            setLoading(false);
+            })
         }
+
+
   }
 
   return (
@@ -107,20 +157,29 @@ function Wedding() {
 
             <ImageList variant="masonry" cols={3} gap={8}>
                 {pictures.map((item, index) => (
+                <a href={item} target="_blank" rel="noreferrer" key={index}>
                 <ImageListItem key={index}>
-                    <img
-                    src={`${item}?w=164&h=164&fit=crop&auto=format`}
-                    srcSet={`${item}?w=164&h=164&fit=crop&auto=format&dpr=2 2x`}
-                    alt='wedding'
-                    loading="lazy"
-                    />
+                    
+                        <img
+                        src={`${item}?w=164&h=164&fit=crop&auto=format`}
+                        srcSet={`${item}?w=164&h=164&fit=crop&auto=format&dpr=2 2x`}
+                        alt='jaggo'
+                        loading="lazy"
+                        key={index}
+                        />
+                    
                 </ImageListItem>
+                </a>
                 ))}
             </ImageList>
 
             )}
 
+            <Stack>
+            {/* {isPrevPage && <Button variant="outlined" onClick={goBackOnePage}>Back</Button>} */}
             {nextPage && <Button variant="outlined" onClick={getPictures}>Next Page</Button>}
+            </Stack>
+            
 
         </Container>
     </>

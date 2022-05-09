@@ -15,8 +15,9 @@ function Jaggo() {
     const [pictures, setPictures] = useState([]);
     const [loading, setLoading] = useState(true);
     const [nextPage, setNextPage] = useState(null);
+
     const [isPrevPage, setisPrevPage] = useState(false);
-    const pages = new Set();
+    let pages = [];
 
     const storage = getStorage(firebaseApp);
     const pathReference = ref(storage, 'gs://weddingpictures-a5e0e.appspot.com/jaggo');
@@ -25,10 +26,16 @@ function Jaggo() {
 
         try {
             setLoading(true);
-            const result = await list(pathReference, {maxResults: 12, pageToken: nextPage});
+            const result = await list(pathReference, {maxResults: 25, pageToken: nextPage});
+            console.log(result)
             if(result.nextPageToken) {
                 setNextPage(result.nextPageToken);
-                pages.add(result.nextPageToken);
+
+                // if(!pages.includes(result.nextPageToken)) {
+                //    pages.push(result.nextPageToken); 
+                // }
+                pages.push(result.nextPageToken);
+                
             } else {
                 setNextPage(null);
             }
@@ -60,7 +67,6 @@ function Jaggo() {
 
   const getPictures = () => {
     setPictures([]);
-    setNextPage(null);
     setLoading(true);
     setisPrevPage(true);
 
@@ -151,21 +157,26 @@ function Jaggo() {
 
             <ImageList variant="masonry" cols={3} gap={8}>
                 {pictures.map((item, index) => (
+                <a href={item} target="_blank" rel="noreferrer" key={index}>
                 <ImageListItem key={index}>
-                    <img
-                    src={`${item}?w=164&h=164&fit=crop&auto=format`}
-                    srcSet={`${item}?w=164&h=164&fit=crop&auto=format&dpr=2 2x`}
-                    alt='jaggo'
-                    loading="lazy"
-                    />
+                    
+                        <img
+                        src={`${item}?w=164&h=164&fit=crop&auto=format`}
+                        srcSet={`${item}?w=164&h=164&fit=crop&auto=format&dpr=2 2x`}
+                        alt='jaggo'
+                        loading="lazy"
+                        key={index}
+                        />
+                    
                 </ImageListItem>
+                </a>
                 ))}
             </ImageList>
 
             )}
 
             <Stack>
-            {isPrevPage && <Button variant="outlined" onClick={goBackOnePage}>Back</Button>}
+            {/* {isPrevPage && <Button variant="outlined" onClick={goBackOnePage}>Back</Button>} */}
             {nextPage && <Button variant="outlined" onClick={getPictures}>Next Page</Button>}
             </Stack>
             
