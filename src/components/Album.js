@@ -15,15 +15,14 @@ import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import Link from '@mui/material/Link';
 import EventIcon from '@mui/icons-material/Event';
-
 import { Link as RouterLink } from 'react-router-dom';
 
 function Copyright() {
   return (
     <Typography variant="body2" color="text.secondary" align="center">
       {'Copyright © '}
-      <Link color="inherit" href="https://mui.com/">
-        Your Website
+      <Link color="inherit" href="https://www.youtube.com/watch?v=ioWkx6WRH2I/">
+        Heer Family
       </Link>{' '}
       {new Date().getFullYear()}
       {'.'}
@@ -31,7 +30,7 @@ function Copyright() {
   );
 }
 
-const cards = [{id:1, event: "Jaggo", date: "Feb 11"}, {id: 2, event: "Wedding", date: "Feb 12"}, {id: 3, event: "Reception", date: "Feb 13"},];
+const cards = [{id:1, event: "Jaggo", img: "/pics/jaggoImg.jpg", date: "Feb 11"}, {id: 2, event: "Wedding", img: '/pics/weddingIMG.jpg', date: "Feb 12"}, {id: 3, event: "Reception", img: '/pics/cakebackground.jpg', date: "Feb 13"},];
 
 export default function Album() {
   return (
@@ -94,7 +93,7 @@ export default function Album() {
                       // 16:9
                       pt: '56.25%',
                     }}
-                    image="https://source.unsplash.com/random"
+                    image={card.img}
                     alt="random"
                   />
                   <CardContent sx={{ flexGrow: 1 }}>
@@ -121,7 +120,7 @@ export default function Album() {
       {/* Footer */}
       <Box sx={{ bgcolor: 'background.paper', p: 6 }} component="footer">
         <Typography variant="h6" align="center" gutterBottom>
-          Footer
+          
         </Typography>
         <Typography
           variant="subtitle1"
