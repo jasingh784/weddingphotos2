@@ -11,13 +11,23 @@ import Stack from '@mui/material/Stack'
 
 
 function Wedding() {
-
+    let pages = [];
     const [pictures, setPictures] = useState([]);
     const [loading, setLoading] = useState(true);
     const [nextPage, setNextPage] = useState(null);
 
-    const [isPrevPage, setisPrevPage] = useState(false);
-    let pages = [];
+    const [windowDimenion, setWindowDimenion] = useState({
+        winWidth: window.innerWidth,
+        winHeight: window.innerHeight,
+    })
+
+    const detectSize = () => {
+        setWindowDimenion({
+            winWidth: window.innerWidth,
+            winHeight: window.innerHeight,
+        })
+    }
+    
 
     const storage = getStorage(firebaseApp);
     const pathReference = ref(storage, 'gs://weddingpictures-a5e0e.appspot.com/marriage');
@@ -26,28 +36,29 @@ function Wedding() {
 
         try {
             setLoading(true);
+            setPictures([]);
             const result = await list(pathReference, {maxResults: 25, pageToken: nextPage});
             console.log(result)
             if(result.nextPageToken) {
                 setNextPage(result.nextPageToken);
-
-                // if(!pages.includes(result.nextPageToken)) {
-                //    pages.push(result.nextPageToken); 
-                // }
-                pages.push(result.nextPageToken);
-                
             } else {
                 setNextPage(null);
             }
             for (const item of result.items) {
                 let url = await getDownloadURL(item);
-                setPictures((pictures) => [...pictures, url]);
+                console.log(url)
+                if(!pictures.includes(url)) {
+                    console.log('not included')
+                    setPictures((pictures) => [...pictures, url]);
+                } else {
+                    console.log('included')
+                }
+                
             }
         } catch (error) {
             console.log(error)
         } finally {
             setLoading(false);
-            console.log(pages)
         }
         
     }
@@ -55,92 +66,93 @@ function Wedding() {
     useEffect(() => {
 
         getFirstFewPictures();
-
-        console.log(pictures)
-
-        return () => {
-          setPictures([])
-          setLoading(true);
-          setNextPage(null);
-        }
   }, [])
+
+  useEffect(() => {
+    window.addEventListener('resize', detectSize);
+  
+    return () => {
+      window.removeEventListener('resize', detectSize);
+    }
+  }, [windowDimenion])
+  
 
   const getPictures = () => {
     setPictures([]);
     setLoading(true);
-    setisPrevPage(true);
+    
 
     getFirstFewPictures();
 
     console.log(pictures)
   }
 
-  const goBackOnePage = () => {
-    console.log('inside go back one page')
-    setPictures([]);
-    setNextPage(null);
-    setLoading(true);
-    console.log(pages.length)
+//   const goBackOnePage = () => {
+//     console.log('inside go back one page')
+//     setPictures([]);
+//     setNextPage(null);
+//     setLoading(true);
+//     console.log(pages.length)
 
-    if(pages.length === 0) { 
-        setisPrevPage(false)
-        list(pathReference, { maxResults: 12})
-        .then((result) => {
-            console.log(result);
-            if(result.nextPageToken) {
-                setNextPage(result.nextPageToken)
-                pages.push(result.nextPageToken);
-            } else {
-                setNextPage(null)
-            }
-            result.items.forEach((item) => {
-                getDownloadURL(item)
-                .then((url) => {
-                    setPictures((pictures) => [...pictures, url]);
-                })
-                .catch((e) => {
-                    console.log(e);
-                })
-            })
+//     if(pages.length === 0) { 
+//         setisPrevPage(false)
+//         list(pathReference, { maxResults: 12})
+//         .then((result) => {
+//             console.log(result);
+//             if(result.nextPageToken) {
+//                 setNextPage(result.nextPageToken)
+//                 pages.push(result.nextPageToken);
+//             } else {
+//                 setNextPage(null)
+//             }
+//             result.items.forEach((item) => {
+//                 getDownloadURL(item)
+//                 .then((url) => {
+//                     setPictures((pictures) => [...pictures, url]);
+//                 })
+//                 .catch((e) => {
+//                     console.log(e);
+//                 })
+//             })
             
-        })
-        .catch((error) => {
-            console.log(error)
-        })
-        .finally(() => {
-          setLoading(false);
-        })
-        } else {
-            list(pathReference, { maxResults: 12, pageToken: pages[pages.length - 1]})
-            .then((result) => {
-                console.log(result);
-                if(result.nextPageToken) {
-                    setNextPage(result.nextPageToken)
-                    pages.push(result.nextPageToken);
-                } else {
-                    setNextPage(null)
-                }
-                result.items.forEach((item) => {
-                    getDownloadURL(item)
-                    .then((url) => {
-                        setPictures((pictures) => [...pictures, url]);
-                    })
-                    .catch((e) => {
-                        console.log(e);
-                    })
-                })
+//         })
+//         .catch((error) => {
+//             console.log(error)
+//         })
+//         .finally(() => {
+//           setLoading(false);
+//         })
+//         } else {
+//             list(pathReference, { maxResults: 12, pageToken: pages[pages.length - 1]})
+//             .then((result) => {
+//                 console.log(result);
+//                 if(result.nextPageToken) {
+//                     setNextPage(result.nextPageToken)
+//                     pages.push(result.nextPageToken);
+//                 } else {
+//                     setNextPage(null)
+//                 }
+//                 result.items.forEach((item) => {
+//                     getDownloadURL(item)
+//                     .then((url) => {
+//                         setPictures((pictures) => [...pictures, url]);
+//                     })
+//                     .catch((e) => {
+//                         console.log(e);
+//                     })
+//                 })
                 
-            })
-            .catch((error) => {
-                console.log(error)
-            })
-            .finally(() => {
-            setLoading(false);
-            })
-        }
+//             })
+//             .catch((error) => {
+//                 console.log(error)
+//             })
+//             .finally(() => {
+//             setLoading(false);
+//             })
+//         }
 
 
-  }
+//   }
 
   return (
     <>
@@ -155,7 +167,7 @@ function Wedding() {
         <Container maxWidth="sm" style={{display: "flex", flexDirection: "column", justifyContent: "center"}}>
             {loading ? <CircularProgress /> : (
 
-            <ImageList variant="masonry" cols={3} gap={8}>
+            <ImageList variant="masonry" cols={windowDimenion.winWidth <= 700 ? 2 : 3} gap={8}>
                 {pictures.map((item, index) => (
                 <a href={item} target="_blank" rel="noreferrer" key={index}>
                 <ImageListItem key={index}>
