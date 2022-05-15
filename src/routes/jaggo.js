@@ -9,7 +9,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import ResponsiveAppBar from '../components/ResponsiveAppBar';
 import Stack from '@mui/material/Stack'
 import AWS  from 'aws-sdk';
-import config from '../config.json';
+
 
 
 function Jaggo() {
