@@ -69,8 +69,8 @@ function Jaggo() {
            // AWS.config.setPromisesDependency();
             AWS.config.update({
                 'credentials' : {
-                    'accessKeyId': process.env.accessKey,
-                    'secretAccessKey': process.env.secretKey,
+                    'accessKeyId': process.env.AWS_ACCESS_KEY_ID_MYAPP,
+                    'secretAccessKey': process.env.AWS_SECRET_ACCESS_KEY_MYAPP,
                 },
             })
             
