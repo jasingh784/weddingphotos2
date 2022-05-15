@@ -6,7 +6,6 @@ import Album from './components/Album';
 
 function App() {
 
-
   
   return (
     <>

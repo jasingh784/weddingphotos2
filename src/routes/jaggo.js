@@ -8,10 +8,11 @@ import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import ResponsiveAppBar from '../components/ResponsiveAppBar';
 import Stack from '@mui/material/Stack'
+import AWS  from 'aws-sdk';
+import config from '../config.json';
 
 
 function Jaggo() {
-    let pages = [];
     const [pictures, setPictures] = useState([]);
     const [loading, setLoading] = useState(true);
     const [nextPage, setNextPage] = useState(null);
@@ -27,12 +28,11 @@ function Jaggo() {
             winHeight: window.innerHeight,
         })
     }
-    
 
     const storage = getStorage(firebaseApp);
     const pathReference = ref(storage, 'gs://weddingpictures-a5e0e.appspot.com/jaggo');
 
-    async function getFirstFewPictures() {
+    async function getPicturesFromFirebase() {
 
         try {
             setLoading(true);
@@ -63,9 +63,59 @@ function Jaggo() {
         
     }
 
-    useEffect(() => {
+    async function getPicturesFromS3() {
+        try {
+           
+           // AWS.config.setPromisesDependency();
+            AWS.config.update({
+                accessKeyId: config.keys.accessKey,
+                secretAccessKey: config.keys.secretKey,
+            })
+            
+            const s3 = new AWS.S3({
+                param: {Bucket: 'jasandamrit'},
+                region: 'us-west-1'
+            });
+            const response = await s3.listObjectsV2({
+                Bucket: 'jasandamrit',
+                Prefix: "jaggo",
+                MaxKeys: 25,
+                ContinuationToken: nextPage
+            })
 
-        getFirstFewPictures();
+            const content = await response.promise();
+
+            console.log('s3 content', content)
+            if(content.NextContinuationToken) {
+                setNextPage(content.NextContinuationToken);
+            } else (
+                setNextPage(null)
+            )
+            //oh boy. This is a mess
+            for(const item in content.Contents) {
+                
+                if(!pictures.includes(content.Contents[item].Key)) {
+                    setPictures((pictures) => [...pictures, content.Contents[item].Key]);
+                }
+               
+            }
+            
+            
+        } catch (error) {
+            console.log(error)
+        } finally {
+            setLoading(false);
+        }
+        
+        
+    }
+
+    useEffect(() => {
+        
+        //getPicturesFromFirebase();
+
+        getPicturesFromS3();
+
   }, [])
 
   useEffect(() => {
@@ -77,14 +127,13 @@ function Jaggo() {
   }, [windowDimenion])
   
 
-  const getPictures = () => {
+  const getNextPictures = () => {
     setPictures([]);
     setLoading(true);
     
 
-    getFirstFewPictures();
-
-    console.log(pictures)
+    //getFirstFewPictures();
+    getPicturesFromS3();
   }
 
 //   const goBackOnePage = () => {
@@ -167,14 +216,13 @@ function Jaggo() {
         <Container maxWidth="sm" style={{display: "flex", flexDirection: "column", justifyContent: "center"}}>
             {loading ? <CircularProgress /> : (
 
-            <ImageList variant="masonry" cols={windowDimenion.winWidth <= 700 ? 2 : 3} gap={8}>
+            <ImageList variant="masonry" cols={windowDimenion.winWidth <= 650 ? 1 : 3} gap={8}>
                 {pictures.map((item, index) => (
-                <a href={item} target="_blank" rel="noreferrer" key={index}>
+                <a href={`https://jasandamrit.s3.us-west-1.amazonaws.com/${item}`} target="_blank" rel="noreferrer" key={index}>
                 <ImageListItem key={index}>
                     
                         <img
-                        src={`${item}?w=164&h=164&fit=crop&auto=format`}
-                        srcSet={`${item}?w=164&h=164&fit=crop&auto=format&dpr=2 2x`}
+                        src={`https://jasandamrit.s3.us-west-1.amazonaws.com/${item}?w=164&h=164&fit=crop&auto=format`}
                         alt='jaggo'
                         loading="lazy"
                         key={index}
@@ -189,7 +237,7 @@ function Jaggo() {
 
             <Stack>
             {/* {isPrevPage && <Button variant="outlined" onClick={goBackOnePage}>Back</Button>} */}
-            {nextPage && <Button variant="outlined" onClick={getPictures}>Next Page</Button>}
+            {nextPage && <Button variant="outlined" onClick={getNextPictures}>Next Page</Button>}
             </Stack>
             
 
